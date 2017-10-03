@@ -12,7 +12,7 @@ public class UnshiftCommand extends ActionCommand{
     }
 
     public void execute() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        
         //TODO
     }
     
