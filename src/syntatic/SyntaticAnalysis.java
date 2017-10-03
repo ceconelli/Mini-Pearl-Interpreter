@@ -1,15 +1,24 @@
 package syntatic;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.HashMap;
+
 import lexical.Lexeme;
 import lexical.TokenType;
 import lexical.LexicalAnalysis;
 
 import interpreter.expr.Expr;
 import interpreter.expr.ConstExpr;
+import interpreter.expr.Variable;
+import interpreter.expr.ScalarVariable;
+import interpreter.expr.FunctionType;
+import interpreter.expr.FunctionExpr;
 import interpreter.value.IntegerValue;
+import interpreter.value.StringValue;
 import interpreter.command.Command;
 import interpreter.command.CommandsBlock;
+import interpreter.command.AssignCommand;
 import interpreter.command.ActionCommand;
 import interpreter.command.PrintCommand;
 
@@ -17,10 +26,12 @@ public class SyntaticAnalysis {
 
     private LexicalAnalysis lex;
     private Lexeme current;
+    private Map<String, Variable> global;
 
     public SyntaticAnalysis(LexicalAnalysis lex) throws IOException {
         this.lex = lex;
         this.current = lex.nextToken();
+        this.global = new HashMap<String, Variable>();
     }
 
     public Command start() throws IOException {
@@ -30,6 +41,7 @@ public class SyntaticAnalysis {
     }
 
     private void matchToken(TokenType type) throws IOException {
+        // System.out.println("Match token: " + current.type + " == " + type + "?");
         if (type == current.type) {
             current = lex.nextToken();
         } else {
@@ -38,18 +50,18 @@ public class SyntaticAnalysis {
     }
 
     private void showError() {
+        System.out.printf("%02d: ", lex.getLine());
+
         switch (current.type) {
             case INVALID_TOKEN:
-                // Imprimir erro lexico (1)
+                System.out.printf("Lexema inválido [%s]\n", current.token);
                 break;
             case UNEXPECTED_EOF:
-                // Imprimir erro lexico (2)
-                break;
             case END_OF_FILE:
-                // imprimir erro sintático (2)
+                System.out.printf("Fim de arquivo inesperado\n");
                 break;
             default:
-                // imprimir erro sintático (1)
+                System.out.printf("Lexema não esperado [%s]\n", current.token);
                 break;
         }
 
@@ -86,7 +98,7 @@ public class SyntaticAnalysis {
             case SVAR:
             case LVAR:
             case HVAR:
-//                procAssign();
+                c = procAssign();
                 break;
             case PRINT:
             case PRINTLN:
@@ -94,24 +106,49 @@ public class SyntaticAnalysis {
             case UNSHIFT:
                 c = procAction();
                 break;
-            case IF:
+//            case IF:
 //                procIf();
-                break;
-            case WHILE:
+//                break;
+//            case WHILE:
 //                procWhile();
-                break;
-            case DO:
+//                break;
+//            case DO:
 //                procDo();
-                break;
-            case FOREACH:
+//                break;
+//            case FOREACH:
 //                procForeach();
-                break;
+//                break;
             default:
                 showError();
                 break;
         }
 
         return c;
+    }
+
+    // <assign> ::= <var> '=' <rhs> [ <post> ] ';'
+    private Command procAssign() throws IOException {
+        int line = lex.getLine();
+
+        Variable v = procVar();
+        matchToken(TokenType.ASSIGN);
+        Expr e = procRhs();
+
+        // PostCondition pc = null;
+        if (current.type == TokenType.IF || current.type == TokenType.FOREACH) {
+            // pc = procPost();
+        }
+
+        matchToken(TokenType.DOT_COMMA);
+
+        AssignCommand ac = new AssignCommand(v, e, line);
+
+//        if (pc == null) {
+            return ac;
+//        } else {
+//            PostConditionalCommand pcc = new PostConditionalCommand(ac, pc, line);
+//            return pcc;
+//        }
     }
 
     // <action> ::= (print <rhs> | println [<rhs>] | push <rhs> ',' <rhs> | unshift <rhs> [ ',' <rhs> ]) [ <post> ] ';'
@@ -121,6 +158,7 @@ public class SyntaticAnalysis {
 
         if (current.type == TokenType.PRINT) {
             // FIXME: print <rhs>
+            showError();
         } else if (current.type == TokenType.PRINTLN) {
             line = lex.getLine();
 
@@ -150,8 +188,10 @@ public class SyntaticAnalysis {
             ac = new PrintCommand(expr, true, line);
         } else if (current.type == TokenType.PUSH) {
             // FIXME: push <rhs> ',' <rhs>
+            showError();
         } else if (current.type == TokenType.UNSHIFT) {
             // FIXME: unshift <rhs> [ ',' <rhs> ])
+            showError();
         } else {
             showError();
         }
@@ -207,13 +247,70 @@ public class SyntaticAnalysis {
             case NUMBER:
                 e = procNumber();
                 break;
-            // FIXME: <string> | <list> | <hash> | <var> | <func> | '(' <sexpr> ')'
+            case STRING:
+                e = procString();
+                break;
+            // FIXME: <list> | <hash>
+            case SVAR:
+            case LVAR:
+            case HVAR:
+                e = procVar();
+                break;
+            case INPUT:
+            case SIZE:
+            case SORT:
+            case REVERSE:
+            case KEYS:
+            case VALUES:
+            case EMPTY:
+            case POP:
+            case SHIFT:
+                e = procFunc();
+                break;
+            // FIXME: '(' <sexpr> ')'
             default:
                 showError();
                 break;
         }
 
         return e;
+    }
+
+    // <var> ::= <scalar-var> | <list-var> '[' <rhs> ']' | <hash-var> '{' <rhs> '}'
+    private Variable procVar() throws IOException {
+        Variable v = null;
+
+        switch (current.type) {
+            case SVAR:
+                v = procScalarVar();
+                break;
+            // FIXME: <list-var> '[' <rhs> ']' | <hash-var> '{' <rhs> '}'
+            default:
+                showError();
+                break;
+        }
+
+        return v;
+    }
+
+    // <func> ::= (input | size | sort | reverse | keys | values | empty | pop | shift ) <rhs>
+    private Expr procFunc() throws IOException {
+        int line = lex.getLine();
+
+        FunctionType type = null;
+        switch (current.type) {
+            case INPUT:
+                matchToken(TokenType.INPUT);
+                type = FunctionType.Input;
+                break;
+            default:
+                showError();
+                break;
+        }
+
+        Expr e = procRhs();
+        FunctionExpr fc = new FunctionExpr(type, e, line);
+        return fc;
     }
 
     // <number>
@@ -227,8 +324,39 @@ public class SyntaticAnalysis {
         Expr e = new ConstExpr(iv, line);
         return e;
     }
-    
-    private void procWhile() throws IOException{
+
+    // <string>
+    private Expr procString() throws IOException {
+        int line = lex.getLine();
+        String str = current.token;
+
+        matchToken(TokenType.STRING);
+
+        StringValue sv = new StringValue(str, line);
+        Expr e = new ConstExpr(sv, line);
+
+        return e;
+    }
+
+    // <scalar-var>
+    private Variable procScalarVar() throws IOException {
+        String name = current.token;
+
+        matchToken(TokenType.SVAR);
+
+        Variable v;
+        if (global.containsKey(name)) {
+            v = global.get(name);
+        } else {
+            v = new ScalarVariable(name);
+            global.put(name, v);
+        }
+
+        return v;
+    }
+
+	// <while>
+	private void procWhile() throws IOException{
 		 matchToken(TokenType.WHILE);		// while
 		 matchToken(TokenType.OPEN_PAR);	// '('
 //		 procBoolExp();						// <boolexp>
@@ -241,4 +369,5 @@ public class SyntaticAnalysis {
     
     private void procBoolExp() throws IOException{
     }
+
 }
