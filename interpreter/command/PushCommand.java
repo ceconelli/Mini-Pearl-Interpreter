@@ -6,7 +6,7 @@ import interpreter.expr.Expr;
  *
  * @author gceconelli
  */
-public class PushCommand extends ActionCommand{
+//public class PushCommand extends ActionCommand{
 
     private Expr list,values;
     
@@ -25,4 +25,4 @@ public class PushCommand extends ActionCommand{
 
     
     
-}
+//}

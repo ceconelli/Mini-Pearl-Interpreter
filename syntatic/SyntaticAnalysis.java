@@ -39,7 +39,7 @@ public class SyntaticAnalysis {
         matchToken(TokenType.END_OF_FILE);
         return cmd;
     }
-
+    
     private void matchToken(TokenType type) throws IOException {
         // System.out.println("Match token: " + current.type + " == " + type + "?");
         if (type == current.type) {
@@ -422,5 +422,7 @@ public class SyntaticAnalysis {
         matchToken(TokenType.CLOSE_CUR);	// '}'
 		 
     }
+    
+    
 
 }
