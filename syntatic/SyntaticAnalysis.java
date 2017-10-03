@@ -181,6 +181,7 @@ public class SyntaticAnalysis {
                 expr = procRhs();
             }
             // FIXME: print <rhs>
+            ac = new PrintCommand(expr, false, line);
             showError();
         } else if (current.type == TokenType.PRINTLN) {
             line = lex.getLine();
@@ -210,10 +211,20 @@ public class SyntaticAnalysis {
 
             ac = new PrintCommand(expr, true, line);
         } else if (current.type == TokenType.PUSH) {
+            matchToken(TokenType.PUSH);
+            Expr expr0 = procRhs();
+            matchToken(TokenType.COMMA);
+            Expr expr1 = procRhs();
+//            ac = new PushCommand(expr0,expr1,line);
             // FIXME: push <rhs> ',' <rhs>
             showError();
         } else if (current.type == TokenType.UNSHIFT) {
             // FIXME: unshift <rhs> [ ',' <rhs> ])
+            matchToken(TokenType.UNSHIFT);
+            Expr expr0 = procRhs();
+            matchToken(TokenType.COMMA);
+            Expr expr1 = procRhs();
+//            ac = new UnshiftCommand(expr0,expr1,line);
             showError();
         } else {
             showError();
@@ -229,6 +240,19 @@ public class SyntaticAnalysis {
     // <rhs> ::= <sexpr> [ '[' <rhs> ']' | '{' <rhs> '}' ]
     private Expr procRhs() throws IOException {
         Expr e = procSExpr();
+        Expr e1 = null;
+        if(current.type == TokenType.OPEN_CUR){
+            matchToken(TokenType.OPEN_CUR);
+            e1 = procRhs();
+            matchToken(TokenType.CLOSE_CUR);
+//            e = new HashIndexExpr();
+        }
+        else if(current.type == TokenType.OPEN_BRA){
+            matchToken(TokenType.OPEN_BRA);
+            e1 = procRhs();
+            matchToken(TokenType.CLOSE_BRA);
+//            e = list
+        }
 
         // FIXME: [ '[' <rhs> ']' | '{' <rhs> '}' ]
 
@@ -247,6 +271,7 @@ public class SyntaticAnalysis {
     // <expr> ::= <term> { ('+' | '-') <term> }
     private Expr procExpr() throws IOException {
         Expr e = procTerm();
+        
 
         // FIXME: { ('+' | '-') <term> }
 
