@@ -241,19 +241,19 @@ public class SyntaticAnalysis {
 
     // <rhs> ::= <sexpr> [ '[' <rhs> ']' | '{' <rhs> '}' ]
     private Expr procRhs() throws IOException {
-        Expr e = procSExpr();
-        Expr e1 = null;
+        Expr ret = procSExpr();
+        Expr e;
         if(current.type == TokenType.OPEN_CUR){
             matchToken(TokenType.OPEN_CUR);
-            e1 = procRhs();
+            e = procRhs();
             matchToken(TokenType.CLOSE_CUR);
-//            e = new HashIndexExpr();
+//            ret = new HashIndexExpr();
         }
         else if(current.type == TokenType.OPEN_BRA){
             matchToken(TokenType.OPEN_BRA);
-            e1 = procRhs();
+            e = procRhs();
             matchToken(TokenType.CLOSE_BRA);
-//            e = list
+//            ret = new ListIndexExpr();
         }
 
         // FIXME: [ '[' <rhs> ']' | '{' <rhs> '}' ]
@@ -263,15 +263,18 @@ public class SyntaticAnalysis {
 
     // <sexpr> ::= <expr> { '.' <expr> }
     private Expr procSExpr() throws IOException {
-        Expr e = procExpr();
+        Expr ret;
+    	
+    	Expr e = procExpr();
 
-        // FIXME: { '.' <expr> }
+        
 
         return e;
     }
 
     // <expr> ::= <term> { ('+' | '-') <term> }
     private Expr procExpr() throws IOException {
+    	Expr ret;
         Expr e = procTerm();
         if(current.type == TokenType.ADD || current.type == TokenType.SUB){
             Expr e1 = null;
@@ -291,7 +294,8 @@ public class SyntaticAnalysis {
 
     // <term> ::= <factor> { ('*' | '/' | '%') <factor> }
     private Expr procTerm() throws IOException {
-        Expr e = procFactor();
+        Expr ret;
+    	Expr e = procFactor();
 
         // FIXME: { ('*' | '/' | '%') <factor> }
 
@@ -310,6 +314,9 @@ public class SyntaticAnalysis {
                 e = procString();
                 break;
             // FIXME: <list> | <hash>
+            case OPEN_BRA:
+            	e = procList();
+            	break;
             case SVAR:
             case LVAR:
             case HVAR:
@@ -436,10 +443,26 @@ public class SyntaticAnalysis {
     private BoolExpr procBoolExpr() throws IOException{
     	
     	BoolExpr _bool;
+    	boolean isNot = false;
     	
-    	if(current.type == TokenType.NOT) // [
+    	if(current.type == TokenType.NOT){ // [
     		matchToken(TokenType.NOT);	// not ]
+    		isNot = true;
+    	}
+    	
+    	BoolExpr cmp = procCmpExpr();
+    	
+    	if(current.type == TokenType.AND){
     		
+    		matchToken(TokenType.AND);
+    		
+    		
+    	}else if(current.type == TokenType.OR){
+    		matchToken(TokenType.OR);
+    	
+    	}else{
+    		showError();
+    	}
     	
     	
     	
@@ -467,14 +490,46 @@ public class SyntaticAnalysis {
     	current.type == TokenType.SHIFT ||
     	current.type == TokenType.OPEN_PAR){
     		
+    		
     	}else if(current.type == TokenType.EMPTY){
+    		
+    	}else{
+    		showError();
+    	}
+    			
+    }
+    
+    private Expr procList() throws IOException{
+    	Expr ret;
+    	
+    	matchToken(TokenType.OPEN_BRA);
+    	
+    	if(current.type == TokenType.NUMBER || 
+    	current.type == TokenType.STRING ||
+    	current.type == TokenType.OPEN_BRA ||
+    	current.type == TokenType.OPEN_CUR ||
+    	current.type == TokenType.SVAR ||
+    	current.type == TokenType.LVAR ||
+    	current.type == TokenType.HVAR ||
+    	current.type == TokenType.INPUT ||
+    	current.type == TokenType.SIZE ||
+    	current.type == TokenType.SORT ||
+    	current.type == TokenType.REVERSE ||
+    	current.type == TokenType.KEYS ||
+    	current.type == TokenType.VALUES ||
+    	current.type == TokenType.POP ||
+    	current.type == TokenType.SHIFT ||
+    	current.type == TokenType.OPEN_PAR){
+    		
+    		Expr rhs1 = procRhs();
     		
     	}else{
     		
     	}
-    		
     	
     }
+    
+
     
 
 }
