@@ -14,6 +14,7 @@ import interpreter.expr.Variable;
 import interpreter.expr.ScalarVariable;
 import interpreter.expr.FunctionType;
 import interpreter.expr.FunctionExpr;
+import interpreter.boolexpr.BoolExpr;
 import interpreter.value.IntegerValue;
 import interpreter.value.StringValue;
 import interpreter.command.Command;
@@ -21,6 +22,7 @@ import interpreter.command.CommandsBlock;
 import interpreter.command.AssignCommand;
 import interpreter.command.ActionCommand;
 import interpreter.command.PrintCommand;
+import interpreter.command.WhileCommand;
 
 public class SyntaticAnalysis {
 
@@ -412,17 +414,67 @@ public class SyntaticAnalysis {
         return v;
     }
     
-    private void procWhile() throws IOException{
-        matchToken(TokenType.WHILE);		// while
+    //<while> ::= while '(' <boolexpr> ')' '{' <statements> '}'
+    private WhileCommand procWhile() throws IOException{
+        
+    	WhileCommand wcmd;
+    	
+    	matchToken(TokenType.WHILE);		// while
         matchToken(TokenType.OPEN_PAR);	// '('
-//		 procBoolExp();						// <boolexp>
+		
+        BoolExpr _bool = procBoolExpr();						// <boolexp>
+        
         matchToken(TokenType.CLOSE_PAR);	// ')'
         matchToken(TokenType.OPEN_CUR);	// '{'
+        
         procStatements();					// <statements>
         matchToken(TokenType.CLOSE_CUR);	// '}'
 		 
     }
     
+    //<boolexpr> ::= [not] <cmpexpr> [ (and | or) <boolexpr> ]
+    private BoolExpr procBoolExpr() throws IOException{
+    	
+    	BoolExpr _bool;
+    	
+    	if(current.type == TokenType.NOT) // [
+    		matchToken(TokenType.NOT);	// not ]
+    		
+    	
+    	
+    	
+    }
+    
+    //<cmpexpr> ::= <sexpr> <relop> <sexpr> | empty <rhs>
+    private BoolExpr procCmpExpr() {
+    	
+    	BoolExpr _bool;
+    	
+    	if(current.type == TokenType.NUMBER || 
+    	current.type == TokenType.STRING ||
+    	current.type == TokenType.OPEN_BRA ||
+    	current.type == TokenType.OPEN_CUR ||
+    	current.type == TokenType.SVAR ||
+    	current.type == TokenType.LVAR ||
+    	current.type == TokenType.HVAR ||
+    	current.type == TokenType.INPUT ||
+    	current.type == TokenType.SIZE ||
+    	current.type == TokenType.SORT ||
+    	current.type == TokenType.REVERSE ||
+    	current.type == TokenType.KEYS ||
+    	current.type == TokenType.VALUES ||
+    	current.type == TokenType.POP ||
+    	current.type == TokenType.SHIFT ||
+    	current.type == TokenType.OPEN_PAR){
+    		
+    	}else if(current.type == TokenType.EMPTY){
+    		
+    	}else{
+    		
+    	}
+    		
+    	
+    }
     
 
 }
