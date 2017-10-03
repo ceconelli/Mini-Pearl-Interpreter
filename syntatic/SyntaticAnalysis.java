@@ -271,7 +271,12 @@ public class SyntaticAnalysis {
     // <expr> ::= <term> { ('+' | '-') <term> }
     private Expr procExpr() throws IOException {
         Expr e = procTerm();
-        
+        if(current.type == TokenType.ADD || current.type == TokenType.SUB){
+            Expr e1 = null;
+            if(current.type == TokenType.ADD){
+//                e1 = 
+            }
+        }
 
         // FIXME: { ('+' | '-') <term> }
 
