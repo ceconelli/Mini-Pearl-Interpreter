@@ -32,6 +32,7 @@ public class LexicalAnalysis implements AutoCloseable {
     }
 
     public Lexeme nextToken() throws IOException {
+    	
          Lexeme lex = new Lexeme("", TokenType.END_OF_FILE);
 
          int state = 1;
@@ -237,17 +238,20 @@ public class LexicalAnalysis implements AutoCloseable {
 	             }
 	        	 
         	 break;
-	
-	         case 12:
-	         
-	        	 lex.type = st.find(lex.token);
-	             
-	         break;
 	         
            }
-           
+    
+	           
          }
 
+         if(state == 12){
+	         
+        	 //System.out.println("lex.token = \'" + lex.token + "\'");
+        	 lex.type = st.find(lex.token);
+         }
+         
+         System.out.println("Token \'" + lex.token + "\' - Type \'" + lex.type + "\'");
+         
          // TODO: implement me.
 
          // HINT: read a char.
