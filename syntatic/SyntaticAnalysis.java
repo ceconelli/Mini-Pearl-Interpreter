@@ -276,6 +276,10 @@ public class SyntaticAnalysis {
             if(current.type == TokenType.ADD){
 //                e1 = 
             }
+            else{
+                
+            }   
+            
         }
 
         // FIXME: { ('+' | '-') <term> }
