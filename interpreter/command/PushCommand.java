@@ -4,8 +4,8 @@ package interpreter.command;
  *
  * @author gceconelli
  */
-public class PushCommand extends ActionCommand{
+//public class PushCommand extends ActionCommand{
 
     
     
-}
+//}
