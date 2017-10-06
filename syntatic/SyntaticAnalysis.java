@@ -23,6 +23,8 @@ import interpreter.command.AssignCommand;
 import interpreter.command.ActionCommand;
 import interpreter.command.PrintCommand;
 import interpreter.command.WhileCommand;
+import interpreter.expr.HashIndexExpr;
+import interpreter.expr.ListIndexExpr;
 
 public class SyntaticAnalysis {
 
@@ -241,24 +243,25 @@ public class SyntaticAnalysis {
 
     // <rhs> ::= <sexpr> [ '[' <rhs> ']' | '{' <rhs> '}' ]
     private Expr procRhs() throws IOException {
+        int line = lex.getLine();
         Expr ret = procSExpr();
         Expr e;
         if(current.type == TokenType.OPEN_CUR){
             matchToken(TokenType.OPEN_CUR);
             e = procRhs();
             matchToken(TokenType.CLOSE_CUR);
-//            ret = new HashIndexExpr();
+            ret = new HashIndexExpr(ret,e,line);
         }
         else if(current.type == TokenType.OPEN_BRA){
             matchToken(TokenType.OPEN_BRA);
             e = procRhs();
             matchToken(TokenType.CLOSE_BRA);
-//            ret = new ListIndexExpr();
+            ret = new ListIndexExpr(ret,e,line);//TODO
         }
 
         // FIXME: [ '[' <rhs> ']' | '{' <rhs> '}' ]
 
-        return e;
+        return ret;
     }
 
     // <sexpr> ::= <expr> { '.' <expr> }
@@ -266,7 +269,14 @@ public class SyntaticAnalysis {
         Expr ret;
     	
     	Expr e = procExpr();
-
+        do{
+            if(current.type == TokenType.CONCAT){
+                matchToken(TokenType.CONCAT);
+                ret = procExpr();
+//                ret = StringconcatExpr(e,ret,lex.getLine());
+            }else
+                break;
+        }while(true);
         
 
         return e;
@@ -424,7 +434,6 @@ public class SyntaticAnalysis {
     //<while> ::= while '(' <boolexpr> ')' '{' <statements> '}'
     private WhileCommand procWhile() throws IOException{
         
-    	WhileCommand wcmd;
     	
     	matchToken(TokenType.WHILE);		// while
         matchToken(TokenType.OPEN_PAR);	// '('
@@ -434,8 +443,9 @@ public class SyntaticAnalysis {
         matchToken(TokenType.CLOSE_PAR);	// ')'
         matchToken(TokenType.OPEN_CUR);	// '{'
         
-        procStatements();					// <statements>
+        Command cmd = this.procCmd();					// <statements>
         matchToken(TokenType.CLOSE_CUR);	// '}'
+        return new WhileCommand(lex.getLine(),_bool,cmd);
 		 
     }
     

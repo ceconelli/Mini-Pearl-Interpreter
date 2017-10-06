@@ -35,7 +35,7 @@ public class ListValue extends CompositeValue{
         
     }
     
-    public PrimitiveValue<?> shift(){
-        
-    }
+//    public PrimitiveValue<?> shift(){
+//        
+//    }
 }
