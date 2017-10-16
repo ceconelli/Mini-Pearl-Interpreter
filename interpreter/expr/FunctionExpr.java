@@ -1,10 +1,16 @@
 package interpreter.expr;
 
+import interpreter.value.HashValue;
 import java.util.Scanner;
 
 import interpreter.value.Value;
 import interpreter.value.StringValue;
 import interpreter.value.IntegerValue;
+import interpreter.value.ListValue;
+import interpreter.value.PrimitiveValue;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 public class FunctionExpr extends Expr {
 
@@ -23,6 +29,22 @@ public class FunctionExpr extends Expr {
        switch (this.type) {
            case Input:
                return inputExpr();
+           case Size:
+               return sizeExpr();
+           case Sort:
+//               return sortExpr();
+           case Reverse:
+//               return reverseExpr();
+           case Keys:
+//               return keysExpr();
+           case Values:
+//               return valuesExpr();
+           case Empty:
+//               return emptyExpr();
+           case Pop:
+//               return popExpr();
+           case Shift:
+//               return shiftExpr();
            // FIXME: All other functions.
            default:
                return null;
@@ -49,6 +71,51 @@ public class FunctionExpr extends Expr {
         } catch (Exception e) {
            StringValue sv = new StringValue(str, this.getLine());
            return sv;
+        }
+    }
+    
+    private Value<?> sizeExpr(){
+        Value<?> v = this.param.expr();
+        int size = 0;
+        if(v instanceof ListValue){
+            ListValue listV = (ListValue)v.value();
+            size = listV.value().size();
+        }
+        else if (v instanceof HashValue){
+            HashValue hashV = (HashValue)v.value();
+            size = hashV.value().size();
+        }
+        return new IntegerValue(size,param.getLine());
+        
+    }
+    
+    private Value<?> sortExpr(){
+        List<PrimitiveValue<?>> values;
+        Value<?> v = this.param.expr();
+        if(v instanceof ListValue){
+            ListValue listV = (ListValue)v.value();
+            values = listV.value();
+//            Collections.sort(values.);
+            return new ListValue(values,param.getLine());
+        }
+        return null;
+    }
+    
+    private Value<?> reverseExpr(){
+        Value<?> v = this.param.expr();
+        if(v instanceof ListValue){
+            ListValue listV = (ListValue)v.value();
+            Collections.reverse(listV.value());
+            return new ListValue(listV.value(),param.getLine());
+        }
+        return null;
+    }
+    
+    private Value<?> keysExpr(){
+        Value<?> v = this.param.expr();
+        if(v instanceof HashValue){
+            HashValue hashV = (HashValue)v.value();
+            
         }
     }
 }

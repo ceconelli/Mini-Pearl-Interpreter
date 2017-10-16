@@ -5,8 +5,9 @@ import java.util.List;
 public class ListValue extends CompositeValue{
     List<PrimitiveValue<?>> listValue;
 
-    public ListValue(int line) {
+    public ListValue(List<PrimitiveValue<?>> listValue,int line) {
         super(line);
+        this.listValue = listValue;
     }
 
     public List<PrimitiveValue<?>> value(){
