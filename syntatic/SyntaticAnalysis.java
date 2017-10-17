@@ -1,7 +1,6 @@
 package syntatic;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -16,6 +15,7 @@ import interpreter.expr.ConstExpr;
 import interpreter.expr.Variable;
 import interpreter.expr.ScalarVariable;
 import interpreter.expr.ListVariable;
+import interpreter.expr.HashVariable;
 import interpreter.expr.FunctionType;
 import interpreter.expr.FunctionExpr;
 import interpreter.boolexpr.BoolExpr;
@@ -150,7 +150,7 @@ public class SyntaticAnalysis {
     private Command procAssign() throws IOException {
         int line = lex.getLine();
 
-        Variable v = procVar();
+        Variable v = (Variable) procVar();
         matchToken(TokenType.ASSIGN);
         Expr e = procRhs();
 
@@ -371,25 +371,39 @@ public class SyntaticAnalysis {
     }
 
     // <var> ::= <scalar-var> | <list-var> '[' <rhs> ']' | <hash-var> '{' <rhs> '}'
-    private Variable procVar() throws IOException {
-        Variable v = null;
+    private Expr procVar() throws IOException {
+        Expr e = null;
+    	Variable v = null;
 
         switch (current.type) {
             case SVAR:
-                v = procScalarVar();
+                e = procScalarVar();
                 break;
+                
             case LVAR:{
-            	
             	v = procListVar();
+            	matchToken(TokenType.OPEN_BRA);
+            	Expr idx = procRhs();
+            	matchToken(TokenType.CLOSE_BRA);
+            	e = new ListIndexExpr(v, idx, lex.getLine());
             	
             }break;
-            // FIXME: <list-var> '[' <rhs> ']' | <hash-var> '{' <rhs> '}'
+            
+            case HVAR:{
+            	v = procHashVar();
+            	matchToken(TokenType.OPEN_CUR);
+            	Expr idx = procRhs();
+            	matchToken(TokenType.CLOSE_CUR);
+            	e = new HashIndexExpr(v, idx, lex.getLine());
+            	
+            }break;
+            
             default:
                 showError();
                 break;
         }
 
-        return v;
+        return e;
     }
 
     // <func> ::= (input | size | sort | reverse | keys | values | empty | pop | shift ) <rhs>
@@ -454,7 +468,7 @@ public class SyntaticAnalysis {
         return v;
     }
     
-    // <list-var>
+ // <list-var>
     private Variable procListVar() throws IOException {
     	String name = current.token;
     	
@@ -465,10 +479,27 @@ public class SyntaticAnalysis {
     		v = global.get(name);
     	} else {
     		v = new ListVariable(name);
+    		global.put(name, v);
     	}
-    	//TODO
-    	return null;
+
+    	return v;	
+    }
+    
+ // <hash-var>
+    private Variable procHashVar() throws IOException {
+    	String name = current.token;
     	
+    	matchToken(TokenType.HVAR);
+    	
+    	Variable v;
+    	if(global.containsKey(name)) {
+    		v = global.get(name);
+    	} else {
+    		v = new HashVariable(name);
+    		global.put(name, v);
+    	}
+
+    	return v;	
     }
     
     //<while> ::= while '(' <boolexpr> ')' '{' <statements> '}'
