@@ -2,7 +2,7 @@ package interpreter.value;
 
 import java.util.List;
 
-public class ListValue extends CompositeValue{
+public class ListValue extends CompositeValue<Object>{
     List<PrimitiveValue<?>> listValue;
 
     public ListValue(List<PrimitiveValue<?>> listValue,int line) {
@@ -19,7 +19,7 @@ public class ListValue extends CompositeValue{
     }
     
     public void push(List<PrimitiveValue<?>> values){
-        for(PrimitiveValue value:values){
+        for(PrimitiveValue<?> value:values){
             this.listValue.add(value);
         }
     }
@@ -28,15 +28,15 @@ public class ListValue extends CompositeValue{
         return this.listValue.remove(0);
     }
     
-    public void  unshift(PrimitiveValue<?> value){
-        
+    public void unshift(PrimitiveValue<?> value){
+        this.listValue.add(0, value);
     }
     
     public void  unshift(List<PrimitiveValue<?>> values){
-        
+    	this.listValue.addAll(0, values);
     }
     
-//    public PrimitiveValue<?> shift(){
-//        
-//    }
+    public PrimitiveValue<?> shift(){
+    	return this.listValue.remove(0);
+    }
 }

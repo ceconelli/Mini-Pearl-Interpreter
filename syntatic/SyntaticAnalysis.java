@@ -1,8 +1,11 @@
 package syntatic;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Vector;
 
 import lexical.Lexeme;
 import lexical.TokenType;
@@ -12,11 +15,16 @@ import interpreter.expr.Expr;
 import interpreter.expr.ConstExpr;
 import interpreter.expr.Variable;
 import interpreter.expr.ScalarVariable;
+import interpreter.expr.ListVariable;
 import interpreter.expr.FunctionType;
 import interpreter.expr.FunctionExpr;
 import interpreter.boolexpr.BoolExpr;
 import interpreter.value.IntegerValue;
 import interpreter.value.StringValue;
+import interpreter.value.ListValue;
+import interpreter.value.HashValue;
+import interpreter.value.Value;
+import interpreter.value.PrimitiveValue;
 import interpreter.command.Command;
 import interpreter.command.CommandsBlock;
 import interpreter.command.AssignCommand;
@@ -68,6 +76,14 @@ public class SyntaticAnalysis {
                 System.out.printf("Lexema não esperado [%s]\n", current.token);
                 break;
         }
+
+        System.exit(1);
+    }
+    
+    public static void showError(String message, int line) {
+        System.out.printf("%02d: ", line);
+
+        System.out.println(message);
 
         System.exit(1);
     }
@@ -327,6 +343,8 @@ public class SyntaticAnalysis {
             case OPEN_BRA:
             	e = procList();
             	break;
+            case OPEN_CUR:
+            	e = procHash();
             case SVAR:
             case LVAR:
             case HVAR:
@@ -360,6 +378,11 @@ public class SyntaticAnalysis {
             case SVAR:
                 v = procScalarVar();
                 break;
+            case LVAR:{
+            	
+            	v = procListVar();
+            	
+            }break;
             // FIXME: <list-var> '[' <rhs> ']' | <hash-var> '{' <rhs> '}'
             default:
                 showError();
@@ -431,6 +454,23 @@ public class SyntaticAnalysis {
         return v;
     }
     
+    // <list-var>
+    private Variable procListVar() throws IOException {
+    	String name = current.token;
+    	
+    	matchToken(TokenType.LVAR);
+    	
+    	Variable v;
+    	if(global.containsKey(name)) {
+    		v = global.get(name);
+    	} else {
+    		v = new ListVariable(name);
+    	}
+    	//TODO
+    	return null;
+    	
+    }
+    
     //<while> ::= while '(' <boolexpr> ')' '{' <statements> '}'
     private WhileCommand procWhile() throws IOException{
         
@@ -474,7 +514,8 @@ public class SyntaticAnalysis {
     		showError();
     	}
     	
-    	
+    	//TODO
+    	return null;
     	
     }
     
@@ -506,37 +547,103 @@ public class SyntaticAnalysis {
     	}else{
     		showError();
     	}
+    	//TODO
+    	return null;
     			
     }
     
+    //<list> ::= '[' [ <rhs> { ',' <rhs> } ] ']'
     private Expr procList() throws IOException{
-    	Expr ret;
-    	
-    	matchToken(TokenType.OPEN_BRA);
-    	
-    	if(current.type == TokenType.NUMBER || 
-    	current.type == TokenType.STRING ||
-    	current.type == TokenType.OPEN_BRA ||
-    	current.type == TokenType.OPEN_CUR ||
-    	current.type == TokenType.SVAR ||
-    	current.type == TokenType.LVAR ||
-    	current.type == TokenType.HVAR ||
-    	current.type == TokenType.INPUT ||
-    	current.type == TokenType.SIZE ||
-    	current.type == TokenType.SORT ||
-    	current.type == TokenType.REVERSE ||
-    	current.type == TokenType.KEYS ||
-    	current.type == TokenType.VALUES ||
-    	current.type == TokenType.POP ||
-    	current.type == TokenType.SHIFT ||
-    	current.type == TokenType.OPEN_PAR){
-    		
-    		Expr rhs1 = procRhs();
-    		
-    	}else{
-    		
-    	}
-    	
+	
+	List<PrimitiveValue<?>> e;
+	ListValue lv = null;
+	
+	matchToken(TokenType.OPEN_BRA);
+	
+	if(current.type == TokenType.NUMBER || 
+	current.type == TokenType.STRING ||
+	current.type == TokenType.OPEN_BRA ||
+	current.type == TokenType.OPEN_CUR ||
+	current.type == TokenType.SVAR ||
+	current.type == TokenType.LVAR ||
+	current.type == TokenType.HVAR ||
+	current.type == TokenType.INPUT ||
+	current.type == TokenType.SIZE ||
+	current.type == TokenType.SORT ||
+	current.type == TokenType.REVERSE ||
+	current.type == TokenType.KEYS ||
+	current.type == TokenType.VALUES ||
+	current.type == TokenType.POP ||
+	current.type == TokenType.SHIFT ||
+	current.type == TokenType.OPEN_PAR){
+		
+		e = new Vector<PrimitiveValue<?>>();
+		e.add((PrimitiveValue<?>)procRhs().expr());
+		
+		while(current.type == TokenType.COMMA){
+			matchToken(TokenType.COMMA);
+			e.add((PrimitiveValue<?>)procRhs().expr());
+		}
+		
+		lv = new ListValue(e, lex.getLine());
+	}
+	
+	matchToken(TokenType.CLOSE_BRA);
+	
+	return new ConstExpr((Value<?>) lv, lex.getLine());
+	
+    }
+    
+    
+    //<hash> ::= '{' [ <rhs> '=>' <rhs> { ',' <rhs> '=>' <rhs> } ] '}'
+    private Expr procHash() throws IOException{
+	
+    Map<String, PrimitiveValue<?>> e;
+	HashValue hv = null;
+	
+	StringValue sv;
+	
+	matchToken(TokenType.OPEN_CUR);
+	
+	if(current.type == TokenType.NUMBER || 
+	current.type == TokenType.STRING ||
+	current.type == TokenType.OPEN_BRA ||
+	current.type == TokenType.OPEN_CUR ||
+	current.type == TokenType.SVAR ||
+	current.type == TokenType.LVAR ||
+	current.type == TokenType.HVAR ||
+	current.type == TokenType.INPUT ||
+	current.type == TokenType.SIZE ||
+	current.type == TokenType.SORT ||
+	current.type == TokenType.REVERSE ||
+	current.type == TokenType.KEYS ||
+	current.type == TokenType.VALUES ||
+	current.type == TokenType.POP ||
+	current.type == TokenType.SHIFT ||
+	current.type == TokenType.OPEN_PAR){
+		
+		e = new HashMap<String, PrimitiveValue<?>>();
+		
+		sv = (StringValue) procRhs().expr();
+		
+		matchToken(TokenType.BIND);
+		e.put(sv.value(), (PrimitiveValue<?>) procRhs().expr());
+		
+		while(current.type == TokenType.COMMA){
+			matchToken(TokenType.COMMA);
+			sv = (StringValue) procRhs().expr();
+			
+			matchToken(TokenType.BIND);
+			e.put(sv.value(), (PrimitiveValue<?>) procRhs().expr());
+		}
+		
+		hv = new HashValue(e, lex.getLine());
+	}
+	
+	matchToken(TokenType.CLOSE_CUR);
+	
+	return new ConstExpr((Value<?>) hv, lex.getLine());
+	
     }
     
 
