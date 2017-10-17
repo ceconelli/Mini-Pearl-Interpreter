@@ -46,7 +46,7 @@ public class FunctionExpr extends Expr {
            case Pop:
                return popExpr();
            case Shift:
-//               return shiftExpr();
+               return shiftExpr();
            // FIXME: All other functions.
            default:
                return null;
@@ -100,7 +100,7 @@ public class FunctionExpr extends Expr {
         if(v instanceof ListValue){
             ListValue listV = (ListValue)v.value();
             values = listV.value();
-//            Collections.sort(values.);
+//            Collections.sort(values.subList(0, 0));
             return new ListValue(values,param.getLine());
         }
         return null;
@@ -195,7 +195,7 @@ public class FunctionExpr extends Expr {
         if(v instanceof ListValue){
             ListValue listV = (ListValue)v.value();
             if(listV.value().size()>0){
-//                ret = listV.shift();
+                ret = listV.shift();
             }
             else
                 ret = null;

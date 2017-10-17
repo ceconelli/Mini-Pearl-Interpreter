@@ -20,7 +20,7 @@ public class mpi {
             Command c = s.start();
             c.execute();
 
-/*
+
             Lexeme lex;
             while (checkType((lex = l.nextToken()).type)) {
                 System.out.printf("(\"%s\", %s)\n", lex.token, lex.type);
@@ -28,16 +28,16 @@ public class mpi {
 
             switch (lex.type) {
                 case INVALID_TOKEN:
-                    System.out.printf("%02d: Lexema inválido [%s]\n", l.line(), lex.token);
+                    System.out.printf("%02d: Lexema inválido [%s]\n", l.getLine(), lex.token);
                     break;
                 case UNEXPECTED_EOF:
-                    System.out.printf("%02d: Fim de arquivo inesperado\n", l.line());
+                    System.out.printf("%02d: Fim de arquivo inesperado\n", l.getLine());
                     break;
                 default:
                     System.out.printf("(\"%s\", %s)\n", lex.token, lex.type);
                     break;
             }
-*/
+
         } catch (Exception e) {
             System.err.println("Internal error: " + e.getMessage());
         }
